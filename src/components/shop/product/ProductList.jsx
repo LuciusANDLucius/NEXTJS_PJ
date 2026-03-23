@@ -7,7 +7,7 @@ export default function ProductList({items}){
 
   return (
     <div className="product-grid">
-      {items.map(i => <ProductCard key={i.id} product={i} />)}
+      {items.map(i => <ProductCard key={i.product_id || i.id} product={i} />)}
     </div>
   )
 }
