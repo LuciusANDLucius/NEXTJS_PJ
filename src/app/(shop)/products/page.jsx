@@ -2,6 +2,8 @@
 import React, {useEffect, useState} from 'react'
 import ProductList from '@/components/shop/product/ProductList'
 import { listProducts } from '@/services/productService'
+import Card from '@/components/common/Card'
+import Button from '@/components/common/Button'
 
 export default function ProductsPage(){
   const [items, setItems] = useState([])

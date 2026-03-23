@@ -1,6 +1,7 @@
 "use client"
 import React, { useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
+import { validateRegister } from '@/utils/validation'
 
 export default function RegisterForm({ onSuccess }){
   const { register: authRegister } = useAuth()
@@ -15,15 +16,7 @@ export default function RegisterForm({ onSuccess }){
     setFieldErrors({...fieldErrors, [e.target.name]: ''})
   }
 
-  const validate = () => {
-    const errs = {}
-    if(!form.username) errs.username = 'Vui lòng nhập username'
-    if(!form.fullname) errs.fullname = 'Vui lòng nhập họ tên'
-    if(!form.email) errs.email = 'Vui lòng nhập email'
-    else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Email không hợp lệ'
-    if(!form.pass || form.pass.length < 8) errs.pass = 'Mật khẩu tối thiểu 8 ký tự'
-    return errs
-  }
+  const validate = () => validateRegister(form)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
