@@ -1,6 +1,7 @@
 import React from 'react'
 import Menu from '@/components/shop/Menu'
 import ProductList from '@/components/shop/product/ProductList'
+import FeaturedProducts from '@/components/shop/FeaturedProducts'
 
 export default function ShopPage() {
   // No demo products: page shows empty state until real data is provided
@@ -16,7 +17,7 @@ export default function ShopPage() {
       <div className="layout" style={{marginTop:20}}>
         <Menu />
         <div className="content">
-          <ProductList items={products} />
+          <FeaturedProducts limit={6} />
         </div>
       </div>
     </div>

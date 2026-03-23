@@ -27,7 +27,7 @@ export function authAgent(errorOrResponse){
     400: data?.message || 'Dữ liệu không hợp lệ. Vui lòng kiểm tra các trường.',
     404: 'Tài nguyên không tồn tại (404).',
     429: 'Thao tác quá nhanh. Vui lòng thử lại sau vài phút.',
-    500: 'Hệ thống đang gặp sự cố. Vui lòng thử lại sau.'
+    500: 'Hệ thống đang gặp sự cố hoặc máy chủ không hoạt động.'
   }
 
   result.uiMessage = errorMap[status] || data?.message || result.uiMessage
