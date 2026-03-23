@@ -8,12 +8,12 @@ export default function ProductCard({product}){
 
   return (
     <article className="product-card">
-      <Link href={`/products/${id}`}>
-        <a style={{textDecoration:'none',color:'inherit'}}>
+      <Link href={`/products/${id}`} style={{textDecoration:'none',color:'inherit'}}>
+        <div>
           <div style={{height:160,background:'#eef2ff',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',color:'#334155'}}>Ảnh</div>
           <div className="title">{title}</div>
           <div className="price">{price}</div>
-        </a>
+        </div>
       </Link>
       <div style={{marginTop:'auto'}}>
         <button className="btn">Thêm vào giỏ</button>
