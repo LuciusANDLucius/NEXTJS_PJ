@@ -12,11 +12,12 @@ export default function AdminProductPage() {
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     
-    // Pagination & Filter state
+    // Pagination, Filter & Trash state
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
-    const [searchQuery, setSearchQuery] = useState(''); // Để khi bấm Tìm kiếm mới gọi API
+    const [searchQuery, setSearchQuery] = useState(''); 
+    const [viewTrash, setViewTrash] = useState(false); // Chế độ xem thùng rác
 
     // Modal state
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -26,12 +27,19 @@ export default function AdminProductPage() {
         try {
             setLoading(true);
             const [prodRes, catRes] = await Promise.all([
-                productAdminService.list({ trash: 0, page: currentPage, name: searchQuery, search: searchQuery, order: 'asc', sort: 'asc' }), // Thử truyền param sort
+                productAdminService.list({ 
+                    trash: viewTrash ? 1 : 0, 
+                    page: currentPage, 
+                    name: searchQuery, 
+                    search: searchQuery, 
+                    order: 'asc', 
+                    sort: 'asc' 
+                }),
                 listCategories()
             ]);
             let fetchedProducts = prodRes.data || prodRes || [];
             
-            // Ép sắp xếp đảo ngược lại (từ thấp đến cao) trên Frontend để đảm bảo logic không bị ngược ID
+            // Ép sắp xếp đảo ngược lại (từ thấp đến cao) trên Frontend
             fetchedProducts = [...fetchedProducts].sort((a, b) => (a.product_id || 0) - (b.product_id || 0));
 
             setProducts(fetchedProducts);
@@ -48,15 +56,31 @@ export default function AdminProductPage() {
 
     useEffect(() => {
         loadProducts();
-    }, [currentPage, searchQuery]);
+        // Reset page khi chuyển tab Thùng rác
+    }, [currentPage, searchQuery, viewTrash]);
 
     const handleDelete = async (id) => {
-        if (confirm("Bạn có chắc chắn muốn chuyển sản phẩm này vào thùng rác?")) {
+        const msg = viewTrash ? "Bạn có chắc chắn muốn xóa VĨNH VIỄN sản phẩm này?" : "Bạn có chắc muốn chuyển sản phẩm này vào thùng rác?";
+        if (confirm(msg)) {
             try {
+                // Tạm gọi hàm delete, backend sẽ quyết định xoá mềm hay cứng dựa vào logic API
+                // Hoặc nếu backend yêu cầu URL xoá vĩnh viễn riêng, bạn có thể thông báo lại.
                 await productAdminService.delete(id);
                 loadProducts(); 
             } catch (error) {
                 alert("Xóa thất bại!");
+            }
+        }
+    };
+
+    const handleRestore = async (id) => {
+        if (confirm("Khôi phục sản phẩm này về danh sách hoạt động?")) {
+            try {
+                // Gửi payload fake với trạng thái trash là 0 để restore (tuỳ cấu trúc BE)
+                await productAdminService.update(id, { trash: 0, status: 1 });
+                loadProducts();
+            } catch (error) {
+                alert("Khôi phục thất bại, Backend có thể dùng API Restore riêng biệt.");
             }
         }
     };
@@ -101,6 +125,7 @@ export default function AdminProductPage() {
                 await productAdminService.create(payload);
             }
             setIsFormOpen(false);
+            setCurrentPage(1); // Set về trang đầu để thấy file vừa sửa
             loadProducts();
         } catch (error) {
             console.error("Save error:", error);
@@ -154,18 +179,37 @@ export default function AdminProductPage() {
             label: 'Thao tác',
             render: (row) => (
                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                    <button 
-                        onClick={() => handleEditClick(row.product_id)}
-                        style={{ color: '#0284c7', background: '#e0f2fe', padding: '6px 12px', borderRadius: '4px', border: '1px solid transparent', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
-                    >
-                        Sửa
-                    </button>
-                    <button 
-                        onClick={() => handleDelete(row.product_id)}
-                        style={{ color: '#dc2626', background: '#fee2e2', padding: '6px 12px', borderRadius: '4px', border: '1px solid transparent', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
-                    >
-                        Xóa
-                    </button>
+                    {!viewTrash ? (
+                        <>
+                            <button 
+                                onClick={() => handleEditClick(row.product_id)}
+                                style={{ color: '#0284c7', background: '#e0f2fe', padding: '6px 12px', borderRadius: '4px', border: '1px solid transparent', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
+                            >
+                                Sửa
+                            </button>
+                            <button 
+                                onClick={() => handleDelete(row.product_id)}
+                                style={{ color: '#dc2626', background: '#fee2e2', padding: '6px 12px', borderRadius: '4px', border: '1px solid transparent', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
+                            >
+                                Xóa
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <button 
+                                onClick={() => handleRestore(row.product_id)}
+                                style={{ color: '#16a34a', background: '#dcfce7', padding: '6px 12px', borderRadius: '4px', border: '1px solid transparent', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
+                            >
+                                Khôi phục
+                            </button>
+                            <button 
+                                onClick={() => handleDelete(row.product_id)}
+                                style={{ color: '#991b1b', background: '#fecaca', padding: '6px 12px', borderRadius: '4px', border: '1px solid transparent', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
+                            >
+                                Xóa hẳn
+                            </button>
+                        </>
+                    )}
                 </div>
             )
         }
@@ -178,10 +222,18 @@ export default function AdminProductPage() {
                     <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', color: '#0f172a', fontWeight: 'bold' }}>Sản phẩm</h1>
                     <p style={{ margin: 0, color: '#64748b' }}>Quản lý kho hàng, thông tin và giá bán sản phẩm.</p>
                 </div>
-                <Button onClick={handleAddClick} style={{ background: '#3b82f6', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '8px', fontSize: '15px' }}>
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-                    Thêm Sản phẩm
-                </Button>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                    <Button onClick={() => {setViewTrash(!viewTrash); setCurrentPage(1);}} style={{ background: viewTrash ? '#ef4444' : '#f1f5f9', color: viewTrash ? '#fff' : '#475569', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '8px', fontSize: '15px', fontWeight: 600 }}>
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        {viewTrash ? 'Đóng Thùng rác' : 'Thùng rác'}
+                    </Button>
+                    {!viewTrash && (
+                        <Button onClick={handleAddClick} style={{ background: '#3b82f6', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '8px', fontSize: '15px' }}>
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+                            Thêm Sản phẩm
+                        </Button>
+                    )}
+                </div>
             </div>
 
             <div style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)', overflow: 'hidden' }}>
