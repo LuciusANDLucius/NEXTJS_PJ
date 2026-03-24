@@ -58,16 +58,24 @@ export default function AdminCategoryPage() {
     const handleSave = async (formData) => {
         try {
             const id = editingCategory?.cat_id || editingCategory?.id;
+            
+            // Lọc payload để đảm bảo sạch sẽ (tránh mang theo rác từ DB khi Edit)
+            const payload = {
+                cat_name: formData.cat_name || formData.name,
+                description: formData.description || ''
+            };
+
             if (id) {
-                await updateCategory(id, formData);
+                await updateCategory(id, payload);
             } else {
-                await createCategory(formData);
+                await createCategory(payload);
             }
             setIsFormOpen(false);
             loadCategories();
         } catch (error) {
             console.error("Save error:", error);
-            alert("Lưu thất bại! Bạn thử kiểm tra lại các trường.");
+            const detailError = error.data ? JSON.stringify(error.data) : error.Message || 'Lỗi 500';
+            alert(`Lưu thất bại! Backend báo: ${detailError}`);
         }
     };
 

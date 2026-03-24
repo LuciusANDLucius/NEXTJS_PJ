@@ -130,13 +130,15 @@ export default function AdminProductPage() {
             key: 'image', 
             label: 'Hình ảnh', 
             render: (row) => {
-                // Xử lý URL ảnh tự động
                 let imgUrl = row.image;
-                if (imgUrl && !imgUrl.startsWith('http')) {
+                if (!imgUrl) {
+                    return <div style={{width: '50px', height: '50px', background: '#f1f5f9', borderRadius: '6px', border: '1px dashed #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#94a3b8'}}>Trống</div>;
+                }
+                if (!imgUrl.startsWith('http')) {
                     imgUrl = `http://localhost:5000/uploads/${imgUrl}`;
                 }
                 return (
-                    <img src={imgUrl || 'https://via.placeholder.com/50'} alt="" width="50" height="50" style={{borderRadius: '6px', border: '1px solid #e2e8f0', objectFit: 'cover'}} /> 
+                    <img src={imgUrl} alt="" width="50" height="50" style={{borderRadius: '6px', border: '1px solid #e2e8f0', objectFit: 'cover'}} /> 
                 )
             }
         },
