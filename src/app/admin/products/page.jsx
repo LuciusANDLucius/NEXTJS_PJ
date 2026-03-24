@@ -26,10 +26,15 @@ export default function AdminProductPage() {
         try {
             setLoading(true);
             const [prodRes, catRes] = await Promise.all([
-                productAdminService.list({ trash: 0, page: currentPage, name: searchQuery, search: searchQuery }), // truyền cả name/search vì các API khác nhau
+                productAdminService.list({ trash: 0, page: currentPage, name: searchQuery, search: searchQuery, order: 'asc', sort: 'asc' }), // Thử truyền param sort
                 listCategories()
             ]);
-            setProducts(prodRes.data || prodRes || []);
+            let fetchedProducts = prodRes.data || prodRes || [];
+            
+            // Ép sắp xếp đảo ngược lại (từ thấp đến cao) trên Frontend để đảm bảo logic không bị ngược ID
+            fetchedProducts = [...fetchedProducts].sort((a, b) => (a.product_id || 0) - (b.product_id || 0));
+
+            setProducts(fetchedProducts);
             setTotalPages(prodRes.totalPage || prodRes.totalPages || prodRes.last_page || 1);
             
             // Gọi categories 1 lần hoặc song song
