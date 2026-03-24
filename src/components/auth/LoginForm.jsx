@@ -1,7 +1,7 @@
 "use client"
 import React, { useState, useRef } from 'react'
-import { login } from '@/services/authServices'
 import authAgent from '@/utils/authAgent'
+import { useAuth } from '@/context/AuthContext'
 
 export default function LoginForm({ onSuccess }){
   const [form, setForm] = useState({ username: '', pass: '' })
@@ -10,6 +10,7 @@ export default function LoginForm({ onSuccess }){
   const [fieldErrors, setFieldErrors] = useState(null)
   const usernameRef = useRef(null)
   const passRef = useRef(null)
+  const { login } = useAuth()
 
   const handleChange = (e) => setForm({...form, [e.target.name]: e.target.value})
 

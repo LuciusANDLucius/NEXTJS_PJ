@@ -1,4 +1,5 @@
 import React from 'react';
+import productService from '@/services/productService';
 
 export default function Footer() {
   return (
