@@ -83,7 +83,7 @@ fetchedProducts = [...fetchedProducts].sort((a, b) => (b.product_id || 0) - (a.p
                 await productAdminService.update(id, { trash: 0, status: 1 });
                 loadProducts();
             } catch (error) {
-                alert("Khôi phục thất bại, Backend có thể dùng API Restore riêng biệt.");
+                alert("Khôi phục thất bại.");
             }
         }
     };
