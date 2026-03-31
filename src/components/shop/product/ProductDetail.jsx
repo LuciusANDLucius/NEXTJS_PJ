@@ -10,7 +10,10 @@ export default function ProductDetail({ product }) {
   const title = product.product_name || product.name || product.title || '—';
   const price = product.price ? Number(product.price).toLocaleString('vi-VN') + '₫' : 'Liên hệ';
   const oldPrice = product.price_old ? Number(product.price_old).toLocaleString('vi-VN') + '₫' : null;
-  const image = product.image || product.thumbnail || null;
+  let image = product.image || product.thumbnail || null;
+  if (image && !image.startsWith('http')) {
+    image = `http://localhost:5000/uploads/${image}`;
+  }
   const description = product.description || product.content || '';
   const category = product.cat_name || '—';
   const brand = product.brand_name || '—';
@@ -52,7 +55,7 @@ export default function ProductDetail({ product }) {
             {/* Status badge */}
             <div>
               <span className="tag" style={{ background: status ? '#dcfce7' : '#fee2e2', color: status ? '#16a34a' : '#dc2626' }}>
-                {status ? '✓ Còn hàng' : '✗ Hết hàng'}
+                {status ? ' Còn hàng' : ' Hết hàng'}
               </span>
             </div>
 
