@@ -4,12 +4,14 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useCart } from '@/context/CartContext';
 
 export default function Header() {
   const { user, logout } = useAuth() || {};
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [cartCount] = useState(0);
+  const {totalItems}= useCart()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -48,12 +50,25 @@ export default function Header() {
             <input placeholder="Tìm sản phẩm..." />
           </div>
 
-          <button className="cart-btn" title="Giỏ hàng">
-            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-            </svg>
-            {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
-          </button>
+          <Link href="/cart"> {/* 3. Thêm Link để bấm vào icon là sang trang giỏ hàng */}
+            <button className="cart-btn" title="Giỏ hàng" style={{ position: 'relative' }}>
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth="2" 
+                  d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" 
+                />
+              </svg>
+              
+              {/* 4. Thay cartCount bằng totalItems thực tế */}
+              {totalItems > 0 && (
+                <span className="cart-badge">
+                  {totalItems > 99 ? "99+" : totalItems}
+                </span>
+              )}
+            </button>
+          </Link>
 
           {user ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
