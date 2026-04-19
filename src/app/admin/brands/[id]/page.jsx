@@ -1,0 +1,1 @@
+export default function Editbrands() { return <div>Cập nhật brands</div> }

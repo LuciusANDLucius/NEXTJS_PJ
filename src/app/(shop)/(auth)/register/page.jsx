@@ -5,10 +5,5 @@ import RegisterForm from '@/components/auth/RegisterForm'
 
 export default function RegisterPage(){
   const router = useRouter()
-
-  return (
-    <div className="container">
-      <RegisterForm onSuccess={() => router.push('/login')} />
-    </div>
-  )
+  return <RegisterForm onSuccess={() => router.push('/login')} />
 }

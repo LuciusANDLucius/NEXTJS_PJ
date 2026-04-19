@@ -1,0 +1,1 @@
+export default function Createorders() { return <div>Thêm mới orders</div> }

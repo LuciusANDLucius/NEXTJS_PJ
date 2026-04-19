@@ -1,0 +1,1 @@
+export default function Editbanners() { return <div>Cập nhật banners</div> }

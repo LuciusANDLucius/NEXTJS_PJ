@@ -1,0 +1,1 @@
+export default function Createtopics() { return <div>Thêm mới topics</div> }

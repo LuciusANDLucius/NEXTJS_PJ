@@ -1,0 +1,1 @@
+export default function Editposts() { return <div>Cập nhật posts</div> }

@@ -1,0 +1,1 @@
+export default function Editcategories() { return <div>Cập nhật categories</div> }

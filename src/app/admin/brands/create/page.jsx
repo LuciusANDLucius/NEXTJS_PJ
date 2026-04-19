@@ -1,0 +1,1 @@
+export default function Createbrands() { return <div>Thêm mới brands</div> }

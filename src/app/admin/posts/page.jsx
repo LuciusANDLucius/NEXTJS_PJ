@@ -70,6 +70,7 @@ export default function AdminPostPage() {
                 title: formData.title || '',
                 slug: formData.slug || '',
                 topic_id: formData.topic_id || null,
+                image: formData.image || '',
                 content: formData.content || '',
                 description: formData.description || '',
                 status: formData.status ?? 1,
@@ -92,6 +93,7 @@ export default function AdminPostPage() {
         { name: 'title', label: 'Tiêu đề', type: 'text', required: true },
         { name: 'slug', label: 'Slug (URL)', type: 'text' },
         { name: 'topic_id', label: 'Chủ đề', type: 'select', options: topicOptions },
+        { name: 'image', label: 'Ảnh đại diện', type: 'image' },
         { name: 'description', label: 'Mô tả ngắn', type: 'textarea' },
         { name: 'content', label: 'Nội dung', type: 'textarea' },
         { name: 'status', label: 'Trạng thái', type: 'select', options: [

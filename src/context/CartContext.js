@@ -3,21 +3,30 @@ import { createContext, useContext, useState, useEffect } from "react";
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-    const [cart, setCart] = useState(() => {
+    const [cart, setCart] = useState([]);
+    const [isLoaded, setIsLoaded] = useState(false);
+
+    useEffect(() => {
         if (typeof window !== "undefined") {
             const savedCart = localStorage.getItem("cart");
-            return savedCart ? JSON.parse(savedCart) : [];
+            if (savedCart) {
+                try {
+                    setCart(JSON.parse(savedCart));
+                } catch (e) {
+                    console.error("Lỗi parse cart:", e);
+                }
+            }
         }
-        return [];
-    });
+        setIsLoaded(true);
+    }, []);
 
     const [toast, setToast] = useState({ id: 0, show: false, message: '' });
 
     useEffect(() => {
-        if (typeof window !== "undefined") {
+        if (isLoaded && typeof window !== "undefined") {
             localStorage.setItem("cart", JSON.stringify(cart));
         }
-    }, [cart]);
+    }, [cart, isLoaded]);
 
     useEffect(() => {
         if (toast.show) {

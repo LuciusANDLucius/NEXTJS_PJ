@@ -1,0 +1,1 @@
+export default function Edittopics() { return <div>Cập nhật topics</div> }

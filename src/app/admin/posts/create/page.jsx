@@ -1,0 +1,1 @@
+export default function Createposts() { return <div>Thêm mới posts</div> }

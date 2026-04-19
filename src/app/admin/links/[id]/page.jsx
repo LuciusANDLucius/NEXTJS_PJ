@@ -1,0 +1,1 @@
+export default function Editlinks() { return <div>Cập nhật links</div> }

@@ -1,0 +1,1 @@
+export default function AdminLogin() { return <div>Đăng nhập thiết lập Admin</div> }

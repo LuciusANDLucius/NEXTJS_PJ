@@ -1,0 +1,1 @@
+export default function Editproducts() { return <div>Cập nhật products</div> }

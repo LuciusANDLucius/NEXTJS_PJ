@@ -1,0 +1,1 @@
+export default function Createproducts() { return <div>Thêm mới products</div> }

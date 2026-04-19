@@ -136,7 +136,8 @@ fetchedProducts = [...fetchedProducts].sort((a, b) => (b.product_id || 0) - (a.p
     const productFields = [
         { name: 'product_name', label: 'Tên sản phẩm', type: 'text', required: true },
         { name: 'price', label: 'Giá bán', type: 'number', required: true },
-        { name: 'image', label: 'Hình ảnh (tên file)', type: 'text' },
+        { name: 'sale_price', label: 'Giá khuyến mãi', type: 'number' },
+        { name: 'image', label: 'Hình ảnh sản phẩm', type: 'image' },
         {
             name: 'cat_id',
             label: 'Danh mục',
@@ -144,7 +145,13 @@ fetchedProducts = [...fetchedProducts].sort((a, b) => (b.product_id || 0) - (a.p
             required: true,
             options: categories.map(c => ({ value: c.cat_id || c.id, label: c.cat_name || c.name }))
         },
-        { name: 'brand_id', label: 'ID Thương hiệu', type: 'number' }
+        { name: 'summary', label: 'Mô tả ngắn', type: 'textarea' },
+        { name: 'detail', label: 'Mô tả chi tiết', type: 'textarea' },
+        { name: 'tag', label: 'Tag SEO', type: 'text' },
+        { name: 'status', label: 'Trạng thái', type: 'select', options: [
+            { value: 1, label: 'Hiển thị' },
+            { value: 0, label: 'Ẩn' },
+        ]},
     ];
 
     const columns = [

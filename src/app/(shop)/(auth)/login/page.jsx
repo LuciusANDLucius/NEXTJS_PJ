@@ -5,10 +5,5 @@ import LoginForm from '@/components/auth/LoginForm'
 
 export default function LoginPage(){
   const router = useRouter()
-
-  return (
-    <div className="container">
-      <LoginForm onSuccess={() => router.push('/')} />
-    </div>
-  )
+  return <LoginForm onSuccess={() => router.push('/')} />
 }

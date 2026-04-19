@@ -1,0 +1,1 @@
+export default function Editorders() { return <div>Cập nhật orders</div> }

@@ -1,0 +1,1 @@
+export default function Createlinks() { return <div>Thêm mới links</div> }

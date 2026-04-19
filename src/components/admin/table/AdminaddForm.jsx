@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Button from '@/components/common/Button';
+import ImageUploader from '@/components/common/ImageUploader';
 
 export default function AdminaddForm({ isOpen, onClose, onSubmit, fields, initialData, title }) {
   const [formData, setFormData] = useState({});
@@ -35,7 +36,13 @@ export default function AdminaddForm({ isOpen, onClose, onSubmit, fields, initia
               <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold', fontSize: '14px' }}>
                 {field.label} {field.required && <span style={{color:'red'}}>*</span>}
               </label>
-              {field.type === 'select' ? (
+              {field.type === 'image' ? (
+                <ImageUploader
+                  value={formData[field.name] || ''}
+                  onChange={(url) => setFormData(prev => ({ ...prev, [field.name]: url }))}
+                  label={field.label}
+                />
+              ) : field.type === 'select' ? (
                 <select
                   name={field.name}
                   value={formData[field.name] || ''}

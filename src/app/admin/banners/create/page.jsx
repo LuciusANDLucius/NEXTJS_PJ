@@ -1,0 +1,1 @@
+export default function Createbanners() { return <div>Thêm mới banners</div> }

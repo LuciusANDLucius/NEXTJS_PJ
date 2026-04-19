@@ -1,0 +1,1 @@
+export default function Createcategories() { return <div>Thêm mới categories</div> }

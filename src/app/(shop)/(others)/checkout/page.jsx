@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
-import styles from '../cart/cart.module.css';
+import styles from '../(others)/cart/cart.module.css';
 
 export default function CheckoutPage() {
   const { cart, total, totalItems, clearCart } = useCart();

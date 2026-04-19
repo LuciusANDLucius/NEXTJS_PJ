@@ -29,7 +29,7 @@ export const me = async(data) =>{
     return res.data
 }
 
-export const profile = async(data) =>{
+export const profile = async (id) => {
     let res = await axiosInstance.get(`/auth/profile/${id}`);
     return res.data
 }
@@ -39,8 +39,12 @@ let res = await axiosInstance.put('/auth/profile', data);
 return res.data;
 }
 export const changePassword = async (data) => {
-let res = await axiosInstance.put('/auth/change-password', data);
-return res.data;
+    // API requires: { oldPass, newPass }
+    let res = await axiosInstance.put('/auth/change-password', {
+        oldPass: data.currentPassword || data.oldPass,
+        newPass: data.newPassword || data.newPass,
+    });
+    return res.data;
 }
 export const logout = async (data) => {
 localStorage.removeItem('user');

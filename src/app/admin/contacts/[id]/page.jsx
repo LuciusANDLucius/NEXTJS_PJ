@@ -1,0 +1,1 @@
+export default function ViewContact() { return <div>Xem liên hệ</div> }

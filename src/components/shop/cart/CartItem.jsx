@@ -1,6 +1,6 @@
 'use client';
 import { useCart } from "@/context/CartContext";
-import styles from "@/app/(shop)/cart/cart.module.css";
+import styles from "@/app/(shop)/(others)/cart/cart.module.css";
 
 export default function CartItem({ item }) {
   const { removeFromCart, updateQuantity } = useCart();

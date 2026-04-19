@@ -1,0 +1,1 @@
+export default function Createusers() { return <div>Thêm mới users</div> }

@@ -23,7 +23,7 @@ export default function Header() {
   const navLinks = [
     { href: '/', label: 'Trang chủ' },
     { href: '/products', label: 'Sản phẩm' },
-    { href: '/posts', label: 'Tin tức' },
+    { href: '/pages', label: 'Tin tức' },
     { href: '/about', label: 'Giới thiệu' },
     { href: '/contact', label: 'Liên hệ' },
   ];
@@ -76,17 +76,43 @@ export default function Header() {
 
           {user ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{
-                width: 36, height: 36, borderRadius: '50%',
-                background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: '#fff', fontWeight: 700, fontSize: 14,
-              }}>
-                {(user.fullname || user.username || 'U')[0].toUpperCase()}
-              </div>
-              <span style={{ fontWeight: 600, fontSize: 14, color: '#0f172a' }}>
-                {user.fullname || user.username}
-              </span>
+              <Link href="/profile" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#fff', fontWeight: 700, fontSize: 14,
+                }}>
+                  {(user.fullname || user.username || 'U')[0].toUpperCase()}
+                </div>
+                <span style={{ fontWeight: 600, fontSize: 14, color: '#0f172a' }}>
+                  {user.fullname || user.username}
+                </span>
+              </Link>
+
+              {/* Admin button — only for admin role */}
+              {(user.role === 'admin' || user.user_type === 'admin') && (
+                <Link href="/admin" style={{ textDecoration: 'none' }}>
+                  <button
+                    className="btn btn-sm"
+                    style={{
+                      background: 'linear-gradient(135deg, #1e293b, #334155)',
+                      color: '#38bdf8',
+                      border: '1px solid #334155',
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      fontWeight: 600, fontSize: 13,
+                    }}
+                    title="Vào trang quản trị"
+                  >
+                    <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Admin
+                  </button>
+                </Link>
+              )}
+
               <button className="secondary-btn btn-sm" onClick={() => logout()}>
                 Đăng xuất
               </button>
