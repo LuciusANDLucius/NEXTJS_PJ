@@ -37,18 +37,19 @@ export default function Menu({ activeCatId, onCatChange }) {
         {categories.map(cat => {
           const catId = cat.cat_id || cat.id;
           const catName = cat.cat_name || cat.name;
-          const isActive = String(activeCatId) === String(catId);
+          const catSlug = cat.alias || catId;
+          const isActive = String(activeCatId) === String(catSlug) || String(activeCatId) === String(catId);
           return (
             <li key={catId} className={isActive ? 'active' : ''}>
               {onCatChange ? (
-                <button onClick={() => onCatChange(catId)}>
+                <button onClick={() => onCatChange(catSlug)}>
                   <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
                   {catName}
                 </button>
               ) : (
-                <Link href={`/products?cat=${catId}`}>
+                <Link href={`/products?cat=${catSlug}`}>
                   <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                   </svg>

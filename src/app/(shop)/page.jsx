@@ -40,18 +40,14 @@ export default function ShopHomePage() {
             </h1>
             <p>Hàng ngàn sản phẩm thời trang chính hãng. Giao hàng nhanh, đổi trả dễ dàng trong 30 ngày.</p>
             <div className="hero-actions">
-              <Link href="/products">
-                <button className="btn btn-lg">
+              <Link href="/products" className="btn btn-lg">
                   Khám phá ngay
                   <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
-                </button>
               </Link>
-              <Link href="/about">
-                <button className="btn btn-lg" style={{ background: 'rgba(255,255,255,0.1)', border: '1.5px solid rgba(255,255,255,0.2)', boxShadow: 'none', color: '#fff' }}>
+              <Link href="/about" className="btn btn-lg" style={{ background: 'rgba(255,255,255,0.1)', border: '1.5px solid rgba(255,255,255,0.2)', boxShadow: 'none', color: '#fff' }}>
                   Về chúng tôi
-                </button>
               </Link>
             </div>
             <div className="hero-stats">
@@ -80,22 +76,21 @@ export default function ShopHomePage() {
                 <div className="section-title">Danh mục nổi bật</div>
                 <div className="section-subtitle">Khám phá theo từng nhóm sản phẩm</div>
               </div>
-              <Link href="/products">
-                <button className="btn btn-ghost btn-sm">Xem tất cả →</button>
+              <Link href="/products" className="btn btn-ghost btn-sm">
+                Xem tất cả →
               </Link>
             </div>
             <div className="category-scroll">
               {categories.map(cat => {
                 const catId = cat.cat_id || cat.id;
                 const catName = cat.cat_name || cat.name;
+                const catSlug = cat.alias || catId;
                 return (
-                  <Link key={catId} href={`/products?cat=${catId}`}>
-                    <div className="category-pill">
+                  <Link key={catId} href={`/products?cat=${catSlug}`} className="category-pill">
                       <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                       </svg>
                       {catName}
-                    </div>
                   </Link>
                 );
               })}
@@ -112,8 +107,8 @@ export default function ShopHomePage() {
               <div className="section-title">Sản phẩm nổi bật</div>
               <div className="section-subtitle">Những sản phẩm được yêu thích nhất</div>
             </div>
-            <Link href="/products">
-              <button className="btn btn-ghost btn-sm">Xem tất cả →</button>
+            <Link href="/products" className="btn btn-ghost btn-sm">
+              Xem tất cả →
             </Link>
           </div>
 

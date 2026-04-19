@@ -60,14 +60,9 @@ fetchedProducts = [...fetchedProducts].sort((a, b) => (b.product_id || 0) - (a.p
     }, [currentPage, searchQuery, viewTrash]);
 
     const handleDelete = async (id) => {
-        const msg = viewTrash ? "Bạn có chắc chắn muốn xóa VĨNH VIỄN sản phẩm này?" : "Bạn có chắc muốn chuyển sản phẩm này vào thùng rác?";
-        if (confirm(msg)) {
+        if (confirm("Bạn có chắc muốn chuyển sản phẩm này vào thùng rác?")) {
             try {
-                if (viewTrash) {
-                    await productAdminService.forceDelete(id);
-                } else {
-                    await productAdminService.delete(id);
-                }
+                await productAdminService.delete(id);
                 loadProducts();
             } catch (error) {
                 const detailError = error.data ? JSON.stringify(error.data) : error.Message || 'Lỗi 500';
@@ -204,12 +199,6 @@ fetchedProducts = [...fetchedProducts].sort((a, b) => (b.product_id || 0) - (a.p
                                 style={{ color: '#16a34a', background: '#dcfce7', padding: '6px 12px', borderRadius: '4px', border: '1px solid transparent', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
                             >
                                 Khôi phục
-                            </button>
-                            <button
-                                onClick={() => handleDelete(row.product_id)}
-                                style={{ color: '#991b1b', background: '#fecaca', padding: '6px 12px', borderRadius: '4px', border: '1px solid transparent', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
-                            >
-                                Xóa hẳn
                             </button>
                         </>
                     )}

@@ -28,35 +28,37 @@ export default function WeatherWidget() {
   }, [selectedProvince]);
 
   return (
-    <div className="p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl shadow-lg w-full max-w-xs">
-      <div className="flex justify-between items-center mb-4">
-        <select 
-          className="bg-transparent border-none text-sm font-bold focus:ring-0 cursor-pointer"
-          value={selectedProvince.name}
-          onChange={(e) => setSelectedProvince(PROVINCES.find(p => p.name === e.target.value))}
-        >
-          {PROVINCES.map(p => (
-            <option key={p.name} value={p.name} className="text-black">{p.name}</option>
-          ))}
-        </select>
-        <span className="text-xs opacity-80">Hiện tại</span>
-      </div>
-
+    <div style={{ 
+      display: 'flex', alignItems: 'center', gap: '8px', 
+      fontSize: '13px', color: 'var(--muted)', background: 'var(--bg)', 
+      border: '1.5px solid var(--border)', borderRadius: '10px', padding: '4px 10px',
+      height: '42px', transition: 'var(--transition)'
+    }} className="weather-widget">
+      <select 
+        style={{ 
+          border: 'none', background: 'transparent', outline: 'none', 
+          fontWeight: '500', color: 'var(--muted)', cursor: 'pointer', fontSize: '13px',
+          maxWidth: '85px', textOverflow: 'ellipsis'
+        }}
+        value={selectedProvince.name}
+        onChange={(e) => setSelectedProvince(PROVINCES.find(p => p.name === e.target.value))}
+      >
+        {PROVINCES.map(p => (
+          <option key={p.name} value={p.name}>{p.name}</option>
+        ))}
+      </select>
+      
       {loading ? (
-        <div className="text-center py-4 text-sm animate-pulse">Đang cập nhật...</div>
+        <span style={{ fontSize: '12px' }}>...</span>
       ) : weather ? (
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-4xl font-extrabold">{Math.round(weather.temp)}°C</div>
-            <p className="text-sm capitalize mt-1 opacity-90">{weather.description}</p>
-          </div>
-          <div className="text-right text-xs">
-            <p>Ẩm: {weather.humidity}%</p>
-            <p>Gió: {weather.wind_speed} m/s</p>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '600', color: 'var(--accent-600)' }} title={weather.description}>
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+          </svg>
+          <span>{Math.round(weather.temp)}°C</span>
         </div>
       ) : (
-        <div className="text-xs text-red-200">Không thể kết nối API</div>
+        <span style={{ fontSize: '12px', color: 'var(--danger)' }}>Lỗi</span>
       )}
     </div>
   );

@@ -8,6 +8,8 @@ import Menu from '@/components/shop/Menu';
 
 export default function ProductsPage() {
   const [items, setItems] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [catsLoaded, setCatsLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -15,14 +17,38 @@ export default function ProductsPage() {
   const [q, setQ] = useState('');
   const [inputQ, setInputQ] = useState('');
   const [activeCat, setActiveCat] = useState(null);
+  const [isReady, setIsReady] = useState(false);
   const limit = 12;
 
+  useEffect(() => {
+    listCategories().then(res => {
+      setCategories(res.data || res || []);
+      setCatsLoaded(true);
+    });
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search);
+      const c = p.get('cat');
+      if (c) setActiveCat(c);
+      setIsReady(true);
+    }
+  }, []);
+
   const fetchProducts = useCallback(async () => {
+    if (!catsLoaded) return;
     setLoading(true);
     try {
       const params = { page, limit };
       if (q) params.name = q;
-      if (activeCat) params.cat_id = activeCat;
+      
+      if (activeCat) {
+        const matched = categories.find(c => String(c.alias) === String(activeCat) || String(c.cat_id) === String(activeCat) || c.cat_name === activeCat);
+        if (matched) {
+          params.category = matched.cat_name;
+          params.cat_id = matched.cat_id;
+        } else {
+          params.category = activeCat;
+        }
+      }
       const res = await listProducts(params);
       setItems(res.data || res || []);
       setTotalPages(res.totalPage || res.totalPages || res.last_page || 1);
@@ -32,9 +58,11 @@ export default function ProductsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, q, activeCat]);
+  }, [page, q, activeCat, catsLoaded, categories]);
 
-  useEffect(() => { fetchProducts(); }, [fetchProducts]);
+  useEffect(() => {
+    if (isReady) fetchProducts();
+  }, [fetchProducts, isReady]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -45,6 +73,12 @@ export default function ProductsPage() {
   const handleCatChange = (catId) => {
     setActiveCat(catId);
     setPage(1);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (catId) url.searchParams.set('cat', catId);
+      else url.searchParams.delete('cat');
+      window.history.pushState({}, '', url);
+    }
   };
 
   return (

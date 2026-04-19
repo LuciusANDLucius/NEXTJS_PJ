@@ -1,7 +1,9 @@
 import React from 'react';
 import Link from 'next/link';
+import { useCart } from '@/context/CartContext';
 
 export default function ProductCard({ product }) {
+  const { addToCart } = useCart();
   const id = product.product_id || product.id || product.productId;
   const title = product.product_name || product.name || product.title || 'Sản phẩm';
   const price = product.price ? Number(product.price).toLocaleString('vi-VN') + '₫' : 'Liên hệ';
@@ -44,7 +46,7 @@ export default function ProductCard({ product }) {
 
         {/* Body */}
         <div className="product-card-body">
-          {category && <div className="product-card-cat">{category}</div>}
+          {category && <div style={{ marginBottom: '6px' }}><span className="tag" style={{ fontSize: '10px', padding: '2px 8px' }}>{category}</span></div>}
           <div className="title">{title}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 'auto' }}>
             <span className="price">{price}</span>
@@ -55,7 +57,14 @@ export default function ProductCard({ product }) {
 
       {/* Add to cart */}
       <div className="product-card-actions">
-        <button className="btn btn-sm" style={{ width: '100%' }}>
+        <button 
+            className="btn btn-sm" 
+            style={{ width: '100%' }}
+            onClick={(e) => {
+                e.preventDefault();
+                addToCart(product);
+            }}
+        >
           <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
           </svg>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
+import WeatherWidget from './WeatherWidget';
 
 export default function Header() {
   const { user, logout } = useAuth() || {};
@@ -22,6 +23,7 @@ export default function Header() {
   const navLinks = [
     { href: '/', label: 'Trang chủ' },
     { href: '/products', label: 'Sản phẩm' },
+    { href: '/posts', label: 'Tin tức' },
     { href: '/about', label: 'Giới thiệu' },
     { href: '/contact', label: 'Liên hệ' },
   ];
@@ -43,6 +45,8 @@ export default function Header() {
         </nav>
 
         <div className="header-right">
+          <WeatherWidget />
+
           <div className="search-bar">
             <svg width="16" height="16" fill="none" stroke="#94a3b8" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
