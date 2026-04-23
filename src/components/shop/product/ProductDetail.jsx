@@ -1,14 +1,17 @@
-'use client';
+ 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
+import { incrementViews } from '@/services/productService';
 
 
 export default function ProductDetail({ product }) {
   const { addToCart } = useCart();
   const [qty, setQty] = useState(1);
+  const [views, setViews] = useState(Number(product?.views ?? product?.view ?? 0));
   if (!product) return null;
+  useIncrementViews(product.product_id || product.id || product._id, views, setViews);
 
   const title = product.product_name || product.name || product.title || '—';
   const price = product.price ? Number(product.price).toLocaleString('vi-VN') + '₫' : 'Liên hệ';
@@ -92,6 +95,10 @@ export default function ProductDetail({ product }) {
                   <span className="product-meta-value" style={{ color: '#64748b' }}>#{product.product_id}</span>
                 </div>
               )}
+                          <div className="product-meta-row">
+                            <span className="product-meta-label">Lượt xem:</span>
+                            <span className="product-meta-value" style={{ color: '#64748b' }}>{views}</span>
+                          </div>
             </div>
 
             {description && (
@@ -150,4 +157,22 @@ export default function ProductDetail({ product }) {
       </div>
     </div>
   );
+}
+
+// Increase views on client when component mounts
+function useIncrementViews(productId, currentViews, setViews) {
+  useEffect(() => {
+    if (!productId) return;
+    let mounted = true;
+    (async () => {
+      try {
+        await incrementViews(productId, currentViews);
+        if (mounted) setViews(v => Number(v) + 1);
+      } catch (e) {
+        // ignore errors silently
+        console.debug('Could not increment views', e);
+      }
+    })();
+    return () => { mounted = false };
+  }, [productId]);
 }

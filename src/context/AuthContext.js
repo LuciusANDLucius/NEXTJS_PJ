@@ -4,30 +4,33 @@ import * as authServices from '@/services/authServices'
 
 const AuthContext = createContext(null)
 
-export function AuthProvider({ children }){
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const verifySession = async () => {
       const stored = localStorage.getItem('user')
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('token') || localStorage.getItem('admin_token')
       if (stored && token) {
         try {
-          // GET /auth/me returns user object directly: { user_id, username, user_type, ... }
+
           const res = await authServices.me()
           if (res && (res.user_id || res.id || res.username)) {
-            // Token valid — restore session from localStorage
             setUser(JSON.parse(stored))
           } else {
-            // Unexpected response — clear session to be safe
-            localStorage.removeItem('user')
-            localStorage.removeItem('token')
+            // Nếu API /me không tồn tại (trả về null từ service), 
+            // chúng ta vẫn tin tưởng dữ liệu trong localStorage để giữ phiên đăng nhập.
+            if (res === null) {
+                setUser(JSON.parse(stored))
+            } else {
+                localStorage.removeItem('user')
+                localStorage.removeItem('token')
+            }
           }
-        } catch (e) {
-          // Network error or 401 — clear session
-          localStorage.removeItem('user')
-          localStorage.removeItem('token')
+        } catch (error) {
+           // Giữ lại session nếu lỗi không phải là 401 Unauthorized
+           setUser(JSON.parse(stored))
         }
       }
       setLoading(false)
@@ -38,7 +41,7 @@ export function AuthProvider({ children }){
 
   const login = async (credentials) => {
     const res = await authServices.login(credentials)
-    if(res && res.user){
+    if (res && res.user) {
       setUser(res.user)
     }
     return res
@@ -61,6 +64,6 @@ export function AuthProvider({ children }){
   )
 }
 
-export function useAuth(){
+export function useAuth() {
   return useContext(AuthContext)
 }

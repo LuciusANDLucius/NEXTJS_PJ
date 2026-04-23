@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import WeatherWidget from './WeatherWidget';
+import ExchangeRate from './ExchangeRate';
 
 export default function Header() {
   const { user, logout } = useAuth() || {};
@@ -45,7 +46,10 @@ export default function Header() {
         </nav>
 
         <div className="header-right">
-          <WeatherWidget />
+          <div className="header-tools">
+            <WeatherWidget />
+            <ExchangeRate />
+          </div>
 
           <div className="search-bar">
             <svg width="16" height="16" fill="none" stroke="#94a3b8" viewBox="0 0 24 24">

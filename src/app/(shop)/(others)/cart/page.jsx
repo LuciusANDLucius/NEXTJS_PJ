@@ -2,10 +2,12 @@
 import Link from "next/link";
 import CartItem from "@/components/shop/cart/CartItem";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 import styles from "./cart.module.css";
 
 export default function CartPage() {
-  const { cart, total, totalItems, clearCart } = useCart();
+  const { cart, subtotal, discountTotal, total, totalItems, clearCart } = useCart();
+  const { user } = useAuth();
 
   const shipping = 0; // Removed mock shipping to fix total calculation confusion
   const finalTotal = total + shipping;
@@ -55,9 +57,16 @@ export default function CartPage() {
           
           <div className={styles.summaryRow}>
             <span>Tạm tính</span>
-            <span className={styles.summaryVal}>{total.toLocaleString("vi-VN")} đ</span>
+            <span className={styles.summaryVal}>{subtotal.toLocaleString("vi-VN")} đ</span>
           </div>
-          
+
+          {discountTotal > 0 && (
+            <div className={styles.summaryRow}>
+              <span>Giảm giá</span>
+              <span className={styles.summaryVal}>-{discountTotal.toLocaleString("vi-VN")} đ</span>
+            </div>
+          )}
+
           <div className={styles.summaryRow}>
             <span>Phí giao hàng</span>
             <span className={styles.summaryVal}>{shipping.toLocaleString("vi-VN")} đ</span>
@@ -68,9 +77,9 @@ export default function CartPage() {
             <span className={styles.totalVal}>{finalTotal.toLocaleString("vi-VN")} đ</span>
           </div>
 
-          <Link href="/checkout" style={{ textDecoration: 'none' }}>
+          <Link href={user ? "/checkout" : "/login?redirect=/checkout"} style={{ textDecoration: 'none' }}>
             <button className={styles.checkoutBtn} style={{ width: '100%' }}>
-              Tiến hành thanh toán
+              {user ? "Tiến hành thanh toán" : "Đăng nhập để thanh toán"}
               <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>

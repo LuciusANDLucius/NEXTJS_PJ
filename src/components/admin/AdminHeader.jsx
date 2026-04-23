@@ -36,9 +36,9 @@ export default function AdminHeader() {
   const crumbs = buildBreadcrumb();
 
   return (
-    <header style={{ height: 'auto', minHeight: 72, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', borderBottom: '1px solid #e2e8f0', zIndex: 10, gap: 20 }}>
+    <header suppressHydrationWarning style={{ height: 'auto', minHeight: 72, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 32px', borderBottom: '1px solid #e2e8f0', zIndex: 10, gap: 20 }}>
       {/* Breadcrumb */}
-      <nav style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14 }}>
+      <nav suppressHydrationWarning style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14 }}>
         {crumbs.map((crumb, i) => (
           <React.Fragment key={i}>
             {i > 0 && <span style={{ color: '#cbd5e1' }}>›</span>}
@@ -54,7 +54,7 @@ export default function AdminHeader() {
       </nav>
 
       {/* Right side */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
+      <div suppressHydrationWarning style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
         {/* View store button */}
         <Link href="/" target="_blank" style={{ textDecoration: 'none' }}>
           <button style={{ background: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0', padding: '8px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>

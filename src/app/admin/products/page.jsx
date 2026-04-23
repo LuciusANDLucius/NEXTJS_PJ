@@ -2,7 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { productAdminService } from '@/services/admin/adminProductService';
+import { listOrders } from '@/services/orderServices';
 import { listCategories } from '@/services/categoriesServices';
+import { listBrands } from '@/services/brandServices';
 import Table from '@/components/common/Table';
 import Button from '@/components/common/Button';
 import AdminaddForm from '@/components/admin/table/AdminaddForm';
@@ -10,6 +12,7 @@ import AdminaddForm from '@/components/admin/table/AdminaddForm';
 export default function AdminProductPage() {
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
+    const [brands, setBrands] = useState([]);
     const [loading, setLoading] = useState(true);
 
     // Pagination, Filter & Trash state
@@ -26,7 +29,7 @@ export default function AdminProductPage() {
     const loadProducts = async () => {
         try {
             setLoading(true);
-            const [prodRes, catRes] = await Promise.all([
+            const [prodRes, catRes, brandRes] = await Promise.all([
                 productAdminService.list({
                     trash: viewTrash ? 1 : 0,
                     page: currentPage,
@@ -35,18 +38,26 @@ export default function AdminProductPage() {
                     order: 'asc',
                     sort: 'asc'
                 }),
-                listCategories()
+                listCategories(),
+                listBrands()
             ]);
             let fetchedProducts = prodRes.data || prodRes || [];
 
-            // Sắp xếp ngược lại: ID lớn nhất (mới nhất) sẽ lên đầu danh sách
-fetchedProducts = [...fetchedProducts].sort((a, b) => (b.product_id || 0) - (a.product_id || 0));
+            // Chuẩn hóa dữ liệu
+            const normalizedData = fetchedProducts.map(item => ({
+                ...item,
+                product_name: item.product_name || item.name || '',
+            }));
 
-            setProducts(fetchedProducts);
+            // Sắp xếp ngược lại: ID lớn nhất (mới nhất) sẽ lên đầu danh sách
+            const sortedProducts = [...normalizedData].sort((a, b) => (b.product_id || 0) - (a.product_id || 0));
+
+            setProducts(sortedProducts);
             setTotalPages(prodRes.totalPage || prodRes.totalPages || prodRes.last_page || 1);
 
-            // Gọi categories 1 lần hoặc song song
+            // Gọi categories và brands
             setCategories(catRes.data || catRes || []);
+            setBrands(brandRes.data || brandRes || []);
         } catch (error) {
             console.error("Lỗi khi tải dữ liệu Admin:", error);
         } finally {
@@ -60,22 +71,53 @@ fetchedProducts = [...fetchedProducts].sort((a, b) => (b.product_id || 0) - (a.p
     }, [currentPage, searchQuery, viewTrash]);
 
     const handleDelete = async (id) => {
-        if (confirm("Bạn có chắc muốn chuyển sản phẩm này vào thùng rác?")) {
-            try {
-                await productAdminService.delete(id);
-                loadProducts();
-            } catch (error) {
-                const detailError = error.data ? JSON.stringify(error.data) : error.Message || 'Lỗi 500';
-                alert(`Xóa thất bại! Backend báo: ${detailError}`);
+        try {
+                // Kiểm tra xem sản phẩm có xuất hiện trong bất kỳ đơn hàng nào không
+                let hasOrders = false;
+                try {
+                    const ordersRes = await listOrders({ product_id: id, limit: 1 });
+                    // Backend có thể trả về các dạng khác nhau: { data: [...] } hoặc trực tiếp array
+                    const ordersArray = ordersRes?.data ?? ordersRes ?? [];
+                    if (Array.isArray(ordersArray) && ordersArray.length > 0) hasOrders = true;
+                } catch (checkErr) {
+                    // Nếu API không hỗ trợ lọc theo product_id, bỏ qua kiểm tra (log để debug)
+                    console.warn('Không thể kiểm tra đơn hàng cho sản phẩm trước khi xóa:', checkErr);
+                }
+
+                if (hasOrders) {
+                    alert('Sản phẩm đang có trong đơn hàng, không được xóa. Vui lòng ẩn sản phẩm hoặc liên hệ quản trị.');
+                    return;
+                }
+
+                if (confirm("Bạn có chắc muốn chuyển sản phẩm này vào thùng rác?")) {
+                    try {
+                        await productAdminService.delete(id);
+                        loadProducts();
+                    } catch (error) {
+                        const detailError = error.data ? JSON.stringify(error.data) : error.Message || 'Lỗi 500';
+                        alert(`Xóa thất bại! Backend báo: ${detailError}`);
+                    }
+                }
+            } catch (outerErr) {
+                console.error('Lỗi khi kiểm tra/xóa sản phẩm:', outerErr);
+                alert('Đã xảy ra lỗi khi xử lý yêu cầu. Vui lòng thử lại.');
             }
-        }
     };
 
-    const handleRestore = async (id) => {
+    const handleRestore = async (row) => {
         if (confirm("Khôi phục sản phẩm này về danh sách hoạt động?")) {
             try {
-                // Gửi payload fake với trạng thái trash là 0 để restore (tuỳ cấu trúc BE)
-                await productAdminService.update(id, { trash: 0, status: 1 });
+                const id = row.product_id || row.id;
+                // Sử dụng PUT với payload tối thiểu để khôi phục
+                const payload = {
+                    product_name: row.product_name || row.name || '',
+                    cat_id: row.cat_id,
+                    brand_id: row.brand_id,
+                    price: row.price || 0,
+                    status: row.status !== undefined ? Number(row.status) : 1,
+                    trash: 0
+                };
+                await productAdminService.update(id, payload);
                 loadProducts();
             } catch (error) {
                 alert("Khôi phục thất bại.");
@@ -107,15 +149,38 @@ fetchedProducts = [...fetchedProducts].sort((a, b) => (b.product_id || 0) - (a.p
     const handleSave = async (formData) => {
         try {
             // Lọc và ép kiểu dữ liệu chuẩn (tránh gửi string "1" thay vì int 1 vào DB gây lỗi 500)
+            const generateAlias = (str) => {
+                if (!str) return '';
+                return str.toString().toLowerCase()
+                    .replace(/á|à|ả|ạ|ã|ă|ắ|ằ|ẳ|ẵ|ặ|â|ấ|ầ|ẩ|ẫ|ậ/gi, 'a')
+                    .replace(/é|è|ẻ|ẽ|ẹ|ê|ế|ề|ể|ễ|ệ/gi, 'e')
+                    .replace(/i|í|ì|ỉ|ĩ|ị/gi, 'i')
+                    .replace(/ó|ò|ỏ|õ|ọ|ô|ố|ồ|ổ|ỗ|ộ|ơ|ớ|ờ|ở|ỡ|ợ/gi, 'o')
+                    .replace(/ú|ù|ủ|ũ|ụ|ư|ứ|ừ|ử|ữ|ự/gi, 'u')
+                    .replace(/ý|ỳ|ỷ|ỹ|ỵ/gi, 'y')
+                    .replace(/đ/gi, 'd')
+                    .replace(/\`|\~|\!|\@|\#|\||\$|\%|\^|\&|\*|\(|\)|\+|\=|\,|\.|\/|\?|\>|\<|\'|\"|\:|\;|_/gi, '')
+                    .replace(/ /gi, "-")
+                    .replace(/\-\-\-\-\-/gi, '-')
+                    .replace(/\-\-\-\-/gi, '-')
+                    .replace(/\-\-\-/gi, '-')
+                    .replace(/\-\-/gi, '-')
+                    .replace(/^\-+|\-+$/g, '');
+            };
+
             const payload = {
                 product_name: formData.product_name,
+                alias: formData.alias || generateAlias(formData.product_name),
                 price: formData.price ? Number(formData.price) : 0,
+                sale_price: formData.sale_price ? Number(formData.sale_price) : 0,
                 image: formData.image || '',
                 cat_id: formData.cat_id ? Number(formData.cat_id) : null,
                 brand_id: formData.brand_id ? Number(formData.brand_id) : null,
+                summary: formData.summary || '',
+                detail: formData.detail || '',
+                tag: formData.tag || '',
+                status: formData.status !== undefined ? Number(formData.status) : 1
             };
-
-            // Nếu DB có thêm trường, bạn có thể tự thêm vào payload
 
             if (editingProduct && editingProduct.product_id) {
                 await productAdminService.update(editingProduct.product_id, payload);
@@ -145,8 +210,16 @@ fetchedProducts = [...fetchedProducts].sort((a, b) => (b.product_id || 0) - (a.p
             required: true,
             options: categories.map(c => ({ value: c.cat_id || c.id, label: c.cat_name || c.name }))
         },
+        {
+            name: 'brand_id',
+            label: 'Thương hiệu',
+            type: 'select',
+            required: true,
+            options: brands.map(b => ({ value: b.brand_id || b.id, label: b.brand_name || b.name }))
+        },
         { name: 'summary', label: 'Mô tả ngắn', type: 'textarea' },
         { name: 'detail', label: 'Mô tả chi tiết', type: 'textarea' },
+        { name: 'alias', label: 'Alias (URL Slug)', type: 'text' },
         { name: 'tag', label: 'Tag SEO', type: 'text' },
         { name: 'status', label: 'Trạng thái', type: 'select', options: [
             { value: 1, label: 'Hiển thị' },
@@ -176,7 +249,7 @@ fetchedProducts = [...fetchedProducts].sort((a, b) => (b.product_id || 0) - (a.p
         {
             key: 'price',
             label: 'Giá bán',
-            render: (row) => <span style={{ fontWeight: 600, color: '#0f172a' }}>{row.price?.toLocaleString()}đ</span>
+            render: (row) => <span style={{ fontWeight: 600, color: '#0f172a' }}>{row.price?.toLocaleString('vi-VN')}đ</span>
         },
         { key: 'cat_name', label: 'Danh mục' },
         {
@@ -202,7 +275,7 @@ fetchedProducts = [...fetchedProducts].sort((a, b) => (b.product_id || 0) - (a.p
                     ) : (
                         <>
                             <button
-                                onClick={() => handleRestore(row.product_id)}
+                                onClick={() => handleRestore(row)}
                                 style={{ color: '#16a34a', background: '#dcfce7', padding: '6px 12px', borderRadius: '4px', border: '1px solid transparent', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
                             >
                                 Khôi phục

@@ -13,12 +13,13 @@ export default function AdminPostPage() {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingPost, setEditingPost] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [viewTrash, setViewTrash] = useState(false);
     const [topicOptions, setTopicOptions] = useState([]);
 
     const loadPosts = async () => {
         try {
             setLoading(true);
-            const res = await listPosts();
+            const res = await listPosts({ trash: viewTrash ? 1 : 0 });
             setPosts(res.data || res || []);
         } catch (error) {
             console.error("Lỗi khi tải dữ liệu Bài viết:", error);
@@ -40,15 +41,36 @@ export default function AdminPostPage() {
     useEffect(() => {
         loadPosts();
         loadTopics();
-    }, []);
+    }, [viewTrash]);
 
     const handleDelete = async (id) => {
-        if (confirm("Bạn có chắc chắn muốn xóa bài viết này?")) {
+        if (confirm("Bạn có chắc chắn muốn chuyển bài viết này vào thùng rác?")) {
             try {
                 await deletePost(id);
                 loadPosts();
             } catch (error) {
                 alert("Xóa thất bại!");
+            }
+        }
+    };
+
+    const handleRestore = async (row) => {
+        if (confirm("Khôi phục bài viết này về danh sách hoạt động?")) {
+            try {
+                const id = row.post_id || row.id;
+                // Sử dụng PUT với payload tối thiểu để khôi phục
+                const payload = {
+                    title: row.title || '',
+                    alias: row.alias || '',
+                    topic_id: row.topic_id ? Number(row.topic_id) : null,
+                    content: row.content || '',
+                    status: row.status !== undefined ? Number(row.status) : 1,
+                    trash: 0
+                };
+                await updatePost(id, payload);
+                loadPosts();
+            } catch (error) {
+                alert("Khôi phục thất bại!");
             }
         }
     };
@@ -63,16 +85,35 @@ export default function AdminPostPage() {
         setIsFormOpen(true);
     };
 
+    const generateAlias = (str) => {
+        if (!str) return '';
+        return str.toString().toLowerCase()
+            .replace(/á|à|ả|ạ|ã|ă|ắ|ằ|ẳ|ẵ|ặ|â|ấ|ầ|ẩ|ẫ|ậ/gi, 'a')
+            .replace(/é|è|ẻ|ẽ|ẹ|ê|ế|ề|ể|ễ|ệ/gi, 'e')
+            .replace(/i|í|ì|ỉ|ĩ|ị/gi, 'i')
+            .replace(/ó|ò|ỏ|õ|ọ|ô|ố|ồ|ổ|ỗ|ộ|ơ|ớ|ờ|ở|ỡ|ợ/gi, 'o')
+            .replace(/ú|ù|ủ|ũ|ụ|ư|ứ|ừ|ử|ữ|ự/gi, 'u')
+            .replace(/ý|ỳ|ỷ|ỹ|ỵ/gi, 'y')
+            .replace(/đ/gi, 'd')
+            .replace(/\`|\~|\!|\@|\#|\||\$|\%|\^|\&|\*|\(|\)|\+|\=|\,|\.|\/|\?|\>|\<|\'|\"|\:|\;|_/gi, '')
+            .replace(/ /gi, "-")
+            .replace(/\-\-\-\-\-/gi, '-')
+            .replace(/\-\-\-\-/gi, '-')
+            .replace(/\-\-\-/gi, '-')
+            .replace(/\-\-/gi, '-')
+            .replace(/^\-+|\-+$/g, '');
+    };
+
     const handleSave = async (formData) => {
         try {
             const id = editingPost?.post_id || editingPost?.id;
+            const aliasStr = formData.alias ? formData.alias : generateAlias(formData.title || '');
             const payload = {
                 title: formData.title || '',
-                slug: formData.slug || '',
-                topic_id: formData.topic_id || null,
                 image: formData.image || '',
+                alias: aliasStr,
+                topic_id: formData.topic_id ? Number(formData.topic_id) : null,
                 content: formData.content || '',
-                description: formData.description || '',
                 status: formData.status ?? 1,
             };
             if (id) {
@@ -91,10 +132,8 @@ export default function AdminPostPage() {
 
     const postFields = [
         { name: 'title', label: 'Tiêu đề', type: 'text', required: true },
-        { name: 'slug', label: 'Slug (URL)', type: 'text' },
+        { name: 'image', label: 'Hình ảnh đại diện', type: 'image' },
         { name: 'topic_id', label: 'Chủ đề', type: 'select', options: topicOptions },
-        { name: 'image', label: 'Ảnh đại diện', type: 'image' },
-        { name: 'description', label: 'Mô tả ngắn', type: 'textarea' },
         { name: 'content', label: 'Nội dung', type: 'textarea' },
         { name: 'status', label: 'Trạng thái', type: 'select', options: [
             { value: 1, label: 'Hiển thị' },
@@ -131,18 +170,29 @@ export default function AdminPostPage() {
             label: 'Thao tác',
             render: (row) => (
                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                    <button
-                        onClick={() => handleEditClick(row)}
-                        style={{ color: '#0284c7', background: '#e0f2fe', padding: '6px 12px', borderRadius: '4px', border: '1px solid transparent', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
-                    >
-                        Sửa
-                    </button>
-                    <button
-                        onClick={() => handleDelete(row.post_id || row.id)}
-                        style={{ color: '#dc2626', background: '#fee2e2', padding: '6px 12px', borderRadius: '4px', border: '1px solid transparent', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
-                    >
-                        Xóa
-                    </button>
+                    {!viewTrash ? (
+                        <>
+                            <button
+                                onClick={() => handleEditClick(row)}
+                                style={{ color: '#0284c7', background: '#e0f2fe', padding: '6px 12px', borderRadius: '4px', border: '1px solid transparent', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
+                            >
+                                Sửa
+                            </button>
+                            <button
+                                onClick={() => handleDelete(row.post_id || row.id)}
+                                style={{ color: '#dc2626', background: '#fee2e2', padding: '6px 12px', borderRadius: '4px', border: '1px solid transparent', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
+                            >
+                                Xóa
+                            </button>
+                        </>
+                    ) : (
+                        <button
+                            onClick={() => handleRestore(row)}
+                            style={{ color: '#16a34a', background: '#dcfce7', padding: '6px 12px', borderRadius: '4px', border: '1px solid transparent', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
+                        >
+                            Khôi phục
+                        </button>
+                    )}
                 </div>
             )
         }
@@ -155,10 +205,18 @@ export default function AdminPostPage() {
                     <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', color: '#0f172a', fontWeight: 'bold' }}>Quản lý Bài viết</h1>
                     <p style={{ margin: 0, color: '#64748b' }}>Đăng và quản lý nội dung bài viết trên website.</p>
                 </div>
-                <Button onClick={handleAddClick} style={{ background: '#3b82f6', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '8px', fontSize: '15px' }}>
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-                    Thêm Bài viết
-                </Button>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                    <Button onClick={() => setViewTrash(!viewTrash)} style={{ background: viewTrash ? '#ef4444' : '#f1f5f9', color: viewTrash ? '#fff' : '#475569', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '8px', fontSize: '15px', fontWeight: 600 }}>
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        {viewTrash ? 'Đóng Thùng rác' : 'Thùng rác'}
+                    </Button>
+                    {!viewTrash && (
+                        <Button onClick={handleAddClick} style={{ background: '#3b82f6', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '8px', fontSize: '15px' }}>
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+                            Thêm Bài viết
+                        </Button>
+                    )}
+                </div>
             </div>
 
             <div style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)', overflow: 'hidden' }}>

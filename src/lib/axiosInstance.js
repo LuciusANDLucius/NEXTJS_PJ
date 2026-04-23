@@ -3,7 +3,7 @@ import axios from "axios";
 const axiosInstance = axios.create({
     // Use NEXT_PUBLIC_API_BASE from environment if provided, fallback to localhost
     baseURL: process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:5000/api', 
-    timeout: 3636,
+    timeout: 10000,
     headers: {
         "Content-Type": "application/json"
     }
@@ -12,11 +12,11 @@ const axiosInstance = axios.create({
     axiosInstance.interceptors.request.use(  
         (config) =>
         {
-            const token = localStorage.getItem("token");
+            // Check for standard 'token' or specific 'admin_token' from localStorage
+            const token = localStorage.getItem("token") || localStorage.getItem("admin_token");
 
             if (token){
                 config.headers.Authorization = `Bearer ${token}`;
-
             }
             return config;
         },
@@ -30,7 +30,7 @@ const axiosInstance = axios.create({
 
             (error) => {
                 const errorData ={
-                    Message: error.response?.data?.Message || "server error",
+                    Message: error.response?.data?.Message || error.response?.data?.message || "server error",
                     status: error.response?.status  ||500,
                     data: error.response?.data || null
                 };

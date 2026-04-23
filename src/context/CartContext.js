@@ -38,15 +38,28 @@ export const CartProvider = ({ children }) => {
     const addToCart = (product, qty = 1) => {
         const parsedQty = Number(qty) || 1;
         setCart(prev => {
-            const exist = prev.find(item => item.product_id === product.product_id);
+            const prodId = product.product_id ?? product.id ?? product.productId;
+            const regularPrice = Number(product.price ?? product.regular_price ?? product.regularPrice ?? product.sale_price ?? product.salePrice ?? 0);
+            const salePrice = product.sale_price ?? product.salePrice ?? null;
+            const exist = prev.find(item => item.product_id === prodId);
             if (exist) {
                 return prev.map(item =>
-                    item.product_id === product.product_id
+                    item.product_id === prodId
                         ? { ...item, quantity: Number(item.quantity) + parsedQty }
                         : item
                 );
             }
-            return [...prev, { ...product, quantity: parsedQty }];
+            const newItem = {
+                product_id: prodId,
+                product_name: product.product_name ?? product.name ?? product.title ?? '',
+                image: product.image ?? product.thumbnail ?? null,
+                price: regularPrice,
+                sale_price: salePrice != null ? Number(salePrice) : null,
+                quantity: parsedQty,
+                // keep other metadata if present
+                ...product
+            };
+            return [...prev, newItem];
         });
         setToast({ id: Date.now(), show: true, message: "Thêm vào giỏ hàng thành công" });
     };
@@ -66,8 +79,22 @@ export const CartProvider = ({ children }) => {
     const clearCart = () => setCart([]);
 
 
+    const subtotal = cart.reduce(
+        (sum, item) => sum + Number(item.price || 0) * (Number(item.quantity) || 1),
+        0
+    );
+
+    const discountTotal = cart.reduce(
+        (sum, item) => {
+            const orig = Number(item.price || 0);
+            const sale = Number(item.sale_price ?? item.salePrice ?? orig);
+            return sum + (Math.max(orig - sale, 0) * (Number(item.quantity) || 1));
+        },
+        0
+    );
+
     const total = cart.reduce(
-        (sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1),
+        (sum, item) => sum + Number((item.sale_price ?? item.price) || 0) * (Number(item.quantity) || 1),
         0
     );
 
@@ -77,7 +104,7 @@ export const CartProvider = ({ children }) => {
     );
 
     return (
-        <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart, total, totalItems }}>
+        <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart, subtotal, discountTotal, total, totalItems }}>
             {children}
             {/* Modern Toast UI */}
             {toast.show && (

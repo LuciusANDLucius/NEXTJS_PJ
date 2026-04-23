@@ -26,7 +26,16 @@ export default function CartItem({ item }) {
       
       <div className={styles.itemDetails}>
         <h3 className={styles.itemName}>{item.product_name}</h3>
-        <p className={styles.itemPrice}>{Number(item.price || 0).toLocaleString('vi-VN')} đ</p>
+        <p className={styles.itemPrice}>
+          {item.sale_price ? (
+            <>
+              <span style={{ fontWeight: 700, color: '#111' }}>{Number(item.sale_price).toLocaleString('vi-VN')} đ</span>
+              <span style={{ textDecoration: 'line-through', color: '#9ca3af', marginLeft: 8 }}>{Number(item.price || 0).toLocaleString('vi-VN')} đ</span>
+            </>
+          ) : (
+            <span style={{ fontWeight: 700 }}>{Number(item.price || 0).toLocaleString('vi-VN')} đ</span>
+          )}
+        </p>
       </div>
       
       <div className={styles.actionGroup} style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
@@ -52,7 +61,7 @@ export default function CartItem({ item }) {
         </div>
         
         <div className={styles.itemTotal}>
-          {(Number(item.price || 0) * Number(item.quantity || 1)).toLocaleString('vi-VN')} đ
+          {(Number((item.sale_price ?? item.price) || 0) * Number(item.quantity || 1)).toLocaleString('vi-VN')} đ
         </div>
         
         <button 

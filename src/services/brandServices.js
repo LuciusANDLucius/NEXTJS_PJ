@@ -12,16 +12,25 @@ export const getBrand = async (id) => {
 
 export const createBrand = async (payload) => {
 	const res = await axios.post('/brands', payload)
+	if (res.data && res.data.error) {
+		throw new Error(res.data.error)
+	}
 	return res.data
 }
 
 export const updateBrand = async (id, payload) => {
 	const res = await axios.put(`/brands/${id}`, payload)
+	if (res.data && res.data.error) {
+		throw new Error(res.data.error)
+	}
 	return res.data
 }
 
 export const deleteBrand = async (id) => {
 	const res = await axios.delete(`/brands/${id}`)
+	if (res.data && res.data.error) {
+		throw new Error(res.data.error)
+	}
 	return res.data
 }
 

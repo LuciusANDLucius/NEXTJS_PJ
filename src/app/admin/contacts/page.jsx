@@ -1,19 +1,21 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { listContacts, deleteContact } from '@/services/contactService';
+import { listContacts, deleteContact, updateContact } from '@/services/contactService';
 import Table from '@/components/common/Table';
+import Button from '@/components/common/Button';
 
 export default function AdminContactPage() {
     const [contacts, setContacts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedContact, setSelectedContact] = useState(null);
+    const [viewTrash, setViewTrash] = useState(false);
 
     const loadContacts = async () => {
         try {
             setLoading(true);
-            const res = await listContacts();
+            const res = await listContacts({ trash: viewTrash ? 1 : 0 });
             let items = res.data || res || [];
             // Mới nhất lên đầu
             items = [...items].sort((a, b) => (b.contact_id || b.id || 0) - (a.contact_id || a.id || 0));
@@ -27,15 +29,37 @@ export default function AdminContactPage() {
 
     useEffect(() => {
         loadContacts();
-    }, []);
+    }, [viewTrash]);
 
     const handleDelete = async (id) => {
-        if (confirm("Bạn có chắc chắn muốn xóa liên hệ này?")) {
+        if (confirm("Bạn có chắc chắn muốn chuyển liên hệ này vào thùng rác?")) {
             try {
                 await deleteContact(id);
                 loadContacts();
             } catch (error) {
                 alert("Xóa thất bại!");
+            }
+        }
+    };
+
+    const handleRestore = async (row) => {
+        if (confirm("Khôi phục liên hệ này về danh sách?")) {
+            try {
+                const id = row.contact_id || row.id;
+                // Sử dụng PUT với payload tối thiểu
+                const payload = {
+                    fullname: row.fullname || row.name || '',
+                    email: row.email || '',
+                    phone: row.phone || '',
+                    title: row.title || row.subject || '',
+                    content: row.content || row.message || '',
+                    status: row.status !== undefined ? Number(row.status) : 0,
+                    trash: 0
+                };
+                await updateContact(id, payload);
+                loadContacts();
+            } catch (error) {
+                alert("Khôi phục thất bại!");
             }
         }
     };
@@ -80,12 +104,21 @@ export default function AdminContactPage() {
                     >
                         Xem
                     </button>
-                    <button
-                        onClick={() => handleDelete(row.contact_id || row.id)}
-                        style={{ color: '#dc2626', background: '#fee2e2', padding: '6px 12px', borderRadius: '4px', border: '1px solid transparent', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
-                    >
-                        Xóa
-                    </button>
+                    {!viewTrash ? (
+                        <button
+                            onClick={() => handleDelete(row.contact_id || row.id)}
+                            style={{ color: '#dc2626', background: '#fee2e2', padding: '6px 12px', borderRadius: '4px', border: '1px solid transparent', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
+                        >
+                            Xóa
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => handleRestore(row)}
+                            style={{ color: '#16a34a', background: '#dcfce7', padding: '6px 12px', borderRadius: '4px', border: '1px solid transparent', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
+                        >
+                            Khôi phục
+                        </button>
+                    )}
                 </div>
             )
         }
@@ -97,6 +130,12 @@ export default function AdminContactPage() {
                 <div>
                     <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', color: '#0f172a', fontWeight: 'bold' }}>Quản lý Liên hệ</h1>
                     <p style={{ margin: 0, color: '#64748b' }}>Xem và quản lý tin nhắn liên hệ từ khách hàng.</p>
+                </div>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                    <Button onClick={() => setViewTrash(!viewTrash)} style={{ background: viewTrash ? '#ef4444' : '#f1f5f9', color: viewTrash ? '#fff' : '#475569', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '8px', fontSize: '15px', fontWeight: 600 }}>
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        {viewTrash ? 'Đóng Thùng rác' : 'Thùng rác'}
+                    </Button>
                 </div>
             </div>
 

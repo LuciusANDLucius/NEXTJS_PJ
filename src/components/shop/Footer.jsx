@@ -75,7 +75,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="footer-bottom">
+        <div suppressHydrationWarning className="footer-bottom">
           <span>© {year} ShopAZ. All rights reserved.</span>
           <span>Thiết kế & phát triển với ♥ tại Việt Nam</span>
         </div>

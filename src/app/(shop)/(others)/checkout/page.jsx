@@ -1,12 +1,18 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
-import styles from '../(others)/cart/cart.module.css';
+import { useAuth } from '@/context/AuthContext';
+import { createOrder } from '@/services/orderServices';
+import styles from '../cart/cart.module.css';
 
 export default function CheckoutPage() {
   const { cart, total, totalItems, clearCart } = useCart();
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [ordered, setOrdered] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -16,15 +22,67 @@ export default function CheckoutPage() {
     note: ''
   });
 
-  const handleSubmit = (e) => {
+  // Check login and pre-fill form
+  useEffect(() => {
+    if (!authLoading && !user) {
+      // Redirect to login if not authenticated
+      router.push('/login?redirect=/checkout');
+    } else if (user) {
+      setFormData(prev => ({
+        ...prev,
+        fullname: user.fullname || user.name || '',
+        phone: user.phone || '',
+        address: user.address || ''
+      }));
+    }
+  }, [user, authLoading, router]);
+
+  if (authLoading) {
+    return (
+      <div style={{ padding: '100px 0', textAlign: 'center' }}>
+        <p style={{ color: '#64748b' }}>Đang kiểm tra thông tin tài khoản...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // Will be redirected by useEffect
+  }
+
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (cart.length === 0) return;
-    
-    // Fake API request 
-    setTimeout(() => {
+
+    try {
+      setSubmitting(true);
+      
+      const payload = {
+        fullname: formData.fullname,
+        phone: formData.phone,
+        address: formData.address,
+        note: formData.note,
+        email: user?.email || '', // Thêm email cho chắc
+        total_amount: total,
+        user_id: user ? Number(user.id ?? user.user_id) : null,
+        items: cart.map(item => ({
+          product_id: Number(item.product_id ?? item.id ?? item.productId),
+          quantity: Number(item.quantity) || 1,
+          price: Number(item.sale_price ?? item.price) || 0
+        }))
+      };
+
+      await createOrder(payload);
+
+      
       clearCart();
       setOrdered(true);
-    }, 800);
+    } catch (error) {
+      console.error("Order error:", error);
+      alert("Đặt hàng thất bại: " + (error.data?.message || error.Message || "Lỗi máy chủ"));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (ordered) {
@@ -76,8 +134,8 @@ export default function CheckoutPage() {
               <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 600, color: '#334155' }}>Ghi chú đơn hàng (Tùy chọn)</label>
               <textarea placeholder="Lưu ý cho người giao hàng..." rows={2} value={formData.note} onChange={e => setFormData({...formData, note: e.target.value})} style={{ width: '100%', padding: '12px 16px', borderRadius: 8, border: '1px solid #cbd5e1', outline: 'none', resize: 'vertical' }} />
             </div>
-            <button type="submit" className="btn btn-lg" style={{ marginTop: 10, width: '100%', padding: '16px', fontSize: 16 }}>
-              Hoàn tất đặt hàng
+            <button type="submit" disabled={submitting} className="btn btn-lg" style={{ marginTop: 10, width: '100%', padding: '16px', fontSize: 16, opacity: submitting ? 0.7 : 1, cursor: submitting ? 'wait' : 'pointer' }}>
+              {submitting ? 'Đang xử lý...' : 'Hoàn tất đặt hàng'}
             </button>
           </form>
         </div>

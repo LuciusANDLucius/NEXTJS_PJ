@@ -24,9 +24,14 @@ export const login = async (data) => {
     return res.data;
 }
 
-export const me = async(data) =>{
-    let res = await axiosInstance.get('auth/me');
-    return res.data
+export const me = async() =>{
+    try {
+        let res = await axiosInstance.get('auth/me');
+        return res.data
+    } catch (e) {
+        // Nếu 404 thì trả về null để AuthContext xử lý nhẹ nhàng
+        return null;
+    }
 }
 
 export const profile = async (id) => {

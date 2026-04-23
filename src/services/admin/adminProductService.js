@@ -30,6 +30,4 @@ export const productAdminService = {
     const res = await axios.delete(`/products/${id}`);
     return res.data;
   },
-
-
 };

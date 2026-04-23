@@ -12,11 +12,12 @@ export default function AdminBannerPage() {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingBanner, setEditingBanner] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [viewTrash, setViewTrash] = useState(false);
 
     const loadBanners = async () => {
         try {
             setLoading(true);
-            const res = await listBanners();
+            const res = await listBanners({ trash: viewTrash ? 1 : 0 });
             setBanners(res.data || res || []);
         } catch (error) {
             console.error("Lỗi khi tải dữ liệu Banner:", error);
@@ -27,15 +28,36 @@ export default function AdminBannerPage() {
 
     useEffect(() => {
         loadBanners();
-    }, []);
+    }, [viewTrash]);
 
     const handleDelete = async (id) => {
-        if (confirm("Bạn có chắc chắn muốn xóa banner này?")) {
+        if (confirm("Bạn có chắc chắn muốn chuyển banner này vào thùng rác?")) {
             try {
                 await deleteBanner(id);
                 loadBanners();
             } catch (error) {
                 alert("Xóa thất bại!");
+            }
+        }
+    };
+
+    const handleRestore = async (row) => {
+        if (confirm("Khôi phục banner này về danh sách hoạt động?")) {
+            try {
+                const id = row.banner_id || row.id;
+                // Sử dụng PUT với payload tối thiểu để khôi phục
+                const payload = {
+                    title: row.title || '',
+                    image_url: row.image_url || '',
+                    link: row.link || '',
+                    position: row.position || 1,
+                    status: row.status !== undefined ? Number(row.status) : 1,
+                    trash: 0
+                };
+                await updateBanner(id, payload);
+                loadBanners();
+            } catch (error) {
+                alert("Khôi phục thất bại!");
             }
         }
     };
@@ -54,12 +76,12 @@ export default function AdminBannerPage() {
         try {
             const id = editingBanner?.banner_id || editingBanner?.id;
             const payload = {
-                name: formData.name || '',
+                title: formData.title || '',
+                image_url: formData.image_url || '',
                 link: formData.link || '',
-                image: formData.image || '',
-                description: formData.description || '',
-                position: formData.position || 'slideshow',
-                status: formData.status ?? 1,
+                is_active: formData.is_active !== undefined ? Number(formData.is_active) : 1,
+                position: formData.position ? Number(formData.position) : 1,
+                status: formData.status !== undefined ? Number(formData.status) : 1,
             };
             if (id) {
                 await updateBanner(id, payload);
@@ -76,41 +98,40 @@ export default function AdminBannerPage() {
     };
 
     const bannerFields = [
-        { name: 'name', label: 'Tên Banner', type: 'text', required: true },
-        { name: 'image', label: 'URL Hình ảnh', type: 'text', required: true },
+        { name: 'title', label: 'Tiêu đề Banner', type: 'text', required: true },
+        { name: 'image_url', label: 'Hình ảnh Banner', type: 'image' },
         { name: 'link', label: 'Đường dẫn liên kết', type: 'text' },
-        { name: 'position', label: 'Vị trí', type: 'select', options: [
-            { value: 'slideshow', label: 'Slideshow' },
-            { value: 'sidebar', label: 'Sidebar' },
-            { value: 'footer', label: 'Footer' },
-        ]},
-        { name: 'description', label: 'Mô tả', type: 'textarea' },
-        { name: 'status', label: 'Trạng thái', type: 'select', options: [
+        { name: 'position', label: 'Thứ tự hiển thị', type: 'number' },
+        { name: 'is_active', label: 'Hiển thị', type: 'select', options: [
             { value: 1, label: 'Hiển thị' },
             { value: 0, label: 'Ẩn' }
+        ]},
+        { name: 'status', label: 'Trạng thái', type: 'select', options: [
+            { value: 1, label: 'Hoạt động' },
+            { value: 0, label: 'Tạm dừng' }
         ]},
     ];
 
     const filteredBanners = banners.filter(b => {
         const term = searchTerm.toLowerCase();
-        return (b.name || '').toLowerCase().includes(term) || (b.description || '').toLowerCase().includes(term);
+        return (b.title || '').toLowerCase().includes(term);
     });
 
     const columns = [
         { key: 'banner_id', label: 'ID', render: (row) => row.banner_id || row.id },
         {
-            key: 'image',
+            key: 'image_url',
             label: 'Hình ảnh',
-            render: (row) => row.image ? (
-                <img src={row.image} alt={row.name} style={{ width: '80px', height: '45px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #e2e8f0' }} />
+            render: (row) => row.image_url ? (
+                <img src={row.image_url} alt={row.title} style={{ width: '80px', height: '45px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #e2e8f0' }} />
             ) : <span style={{ color: '#94a3b8' }}>Chưa có</span>
         },
         {
-            key: 'name',
-            label: 'Tên Banner',
-            render: (row) => <span style={{ fontWeight: 600, color: '#0f172a' }}>{row.name}</span>
+            key: 'title',
+            label: 'Tiêu đề Banner',
+            render: (row) => <span style={{ fontWeight: 600, color: '#0f172a' }}>{row.title}</span>
         },
-        { key: 'position', label: 'Vị trí', render: (row) => <span style={{ padding: '4px 10px', borderRadius: '20px', background: '#ede9fe', color: '#7c3aed', fontWeight: 600, fontSize: '13px', textTransform: 'capitalize' }}>{row.position || '—'}</span> },
+        { key: 'position', label: 'Thứ tự', render: (row) => <span style={{ padding: '4px 10px', borderRadius: '20px', background: '#ede9fe', color: '#7c3aed', fontWeight: 600, fontSize: '13px' }}>{row.position || '—'}</span> },
         {
             key: 'status',
             label: 'Trạng thái',
@@ -124,18 +145,29 @@ export default function AdminBannerPage() {
             label: 'Thao tác',
             render: (row) => (
                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                    <button
-                        onClick={() => handleEditClick(row)}
-                        style={{ color: '#0284c7', background: '#e0f2fe', padding: '6px 12px', borderRadius: '4px', border: '1px solid transparent', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
-                    >
-                        Sửa
-                    </button>
-                    <button
-                        onClick={() => handleDelete(row.banner_id || row.id)}
-                        style={{ color: '#dc2626', background: '#fee2e2', padding: '6px 12px', borderRadius: '4px', border: '1px solid transparent', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
-                    >
-                        Xóa
-                    </button>
+                    {!viewTrash ? (
+                        <>
+                            <button
+                                onClick={() => handleEditClick(row)}
+                                style={{ color: '#0284c7', background: '#e0f2fe', padding: '6px 12px', borderRadius: '4px', border: '1px solid transparent', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
+                            >
+                                Sửa
+                            </button>
+                            <button
+                                onClick={() => handleDelete(row.banner_id || row.id)}
+                                style={{ color: '#dc2626', background: '#fee2e2', padding: '6px 12px', borderRadius: '4px', border: '1px solid transparent', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
+                            >
+                                Xóa
+                            </button>
+                        </>
+                    ) : (
+                        <button
+                            onClick={() => handleRestore(row)}
+                            style={{ color: '#16a34a', background: '#dcfce7', padding: '6px 12px', borderRadius: '4px', border: '1px solid transparent', cursor: 'pointer', fontWeight: 500, transition: '0.2s' }}
+                        >
+                            Khôi phục
+                        </button>
+                    )}
                 </div>
             )
         }
@@ -148,10 +180,18 @@ export default function AdminBannerPage() {
                     <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', color: '#0f172a', fontWeight: 'bold' }}>Quản lý Banner</h1>
                     <p style={{ margin: 0, color: '#64748b' }}>Quản lý hình ảnh quảng cáo, slideshow trên website.</p>
                 </div>
-                <Button onClick={handleAddClick} style={{ background: '#3b82f6', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '8px', fontSize: '15px' }}>
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-                    Thêm Banner
-                </Button>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                    <Button onClick={() => setViewTrash(!viewTrash)} style={{ background: viewTrash ? '#ef4444' : '#f1f5f9', color: viewTrash ? '#fff' : '#475569', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '8px', fontSize: '15px', fontWeight: 600 }}>
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        {viewTrash ? 'Đóng Thùng rác' : 'Thùng rác'}
+                    </Button>
+                    {!viewTrash && (
+                        <Button onClick={handleAddClick} style={{ background: '#3b82f6', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '8px', fontSize: '15px' }}>
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+                            Thêm Banner
+                        </Button>
+                    )}
+                </div>
             </div>
 
             <div style={{ background: '#fff', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)', overflow: 'hidden' }}>

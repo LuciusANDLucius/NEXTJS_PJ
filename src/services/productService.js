@@ -40,4 +40,11 @@ export const getRelatedProducts = async (id, limit = 5) => {
   return res.data
 }
 
+export const incrementViews = async (id, current = 0) => {
+  // Try to increment views by sending a minimal update payload.
+  // Backend may support PATCH or PUT; using PUT with { views } to be compatible with updateProduct.
+  const res = await axios.put(`/products/${id}`, { views: Number(current) + 1 })
+  return res.data
+}
+
 export default { listProducts, getProduct, createProduct, updateProduct, deleteProduct, getNewProducts, getBestsellers, getRelatedProducts }

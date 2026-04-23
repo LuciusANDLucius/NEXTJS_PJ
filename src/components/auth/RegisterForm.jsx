@@ -16,6 +16,29 @@ function validateRegister(form) {
   return errs;
 }
 
+// Move Field outside to prevent focus loss on re-render
+const Field = ({ name, label, value, onChange, fieldErrors, type = 'text', placeholder, extra }) => (
+  <div style={{ marginBottom: 18 }}>
+    <label style={{ display: 'block', marginBottom: 7, fontSize: 14, fontWeight: 600, color: '#334155' }}>{label}</label>
+    <div style={{ position: 'relative' }}>
+      <input
+        name={name}
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        style={{
+          width: '100%', padding: '11px 16px', borderRadius: 10,
+          border: `1.5px solid ${fieldErrors?.[name] ? '#fca5a5' : '#e2e8f0'}`,
+          fontSize: 14, outline: 'none', boxSizing: 'border-box', background: fieldErrors?.[name] ? '#fef2f2' : '#fff'
+        }}
+      />
+      {extra}
+    </div>
+    {fieldErrors?.[name] && <div style={{ color: '#dc2626', fontSize: 12, marginTop: 5 }}>{fieldErrors[name]}</div>}
+  </div>
+);
+
 export default function RegisterForm({ onSuccess }) {
   const { register: authRegister } = useAuth();
   const [form, setForm] = useState({ username: '', fullname: '', email: '', pass: '', confirmPass: '', avatar: '' });
@@ -53,28 +76,6 @@ export default function RegisterForm({ onSuccess }) {
       setLoading(false);
     }
   };
-
-  const Field = ({ name, label, type = 'text', placeholder, extra }) => (
-    <div style={{ marginBottom: 18 }}>
-      <label style={{ display: 'block', marginBottom: 7, fontSize: 14, fontWeight: 600, color: '#334155' }}>{label}</label>
-      <div style={{ position: 'relative' }}>
-        <input
-          name={name}
-          type={type === 'password' && name === 'pass' && showPass ? 'text' : type}
-          value={form[name]}
-          onChange={handleChange}
-          placeholder={placeholder}
-          style={{
-            width: '100%', padding: '11px 16px', borderRadius: 10,
-            border: `1.5px solid ${fieldErrors[name] ? '#fca5a5' : '#e2e8f0'}`,
-            fontSize: 14, outline: 'none', boxSizing: 'border-box', background: fieldErrors[name] ? '#fef2f2' : '#fff'
-          }}
-        />
-        {extra}
-      </div>
-      {fieldErrors[name] && <div style={{ color: '#dc2626', fontSize: 12, marginTop: 5 }}>{fieldErrors[name]}</div>}
-    </div>
-  );
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc' }}>
@@ -128,13 +129,13 @@ export default function RegisterForm({ onSuccess }) {
 
           <form onSubmit={handleSubmit}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
-              <Field name="username" label="Username *" placeholder="mai123" />
-              <Field name="fullname" label="Họ và tên *" placeholder="Nguyễn Thị Mai" />
+              <Field name="username" label="Username *" value={form.username} onChange={handleChange} fieldErrors={fieldErrors} placeholder="mai123" />
+              <Field name="fullname" label="Họ và tên *" value={form.fullname} onChange={handleChange} fieldErrors={fieldErrors} placeholder="Nguyễn Thị Mai" />
             </div>
-            <Field name="email" label="Email *" placeholder="user@gmail.com" />
+            <Field name="email" label="Email *" value={form.email} onChange={handleChange} fieldErrors={fieldErrors} placeholder="user@gmail.com" />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
               <Field
-                name="pass" label="Mật khẩu *" type="password" placeholder="Tối thiểu 6 ký tự"
+                name="pass" label="Mật khẩu *" type={showPass ? 'text' : 'password'} value={form.pass} onChange={handleChange} fieldErrors={fieldErrors} placeholder="Tối thiểu 6 ký tự"
                 extra={
                   <button type="button" onClick={() => setShowPass(!showPass)}
                     style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}>
@@ -147,7 +148,7 @@ export default function RegisterForm({ onSuccess }) {
                   </button>
                 }
               />
-              <Field name="confirmPass" label="Xác nhận mật khẩu *" type="password" placeholder="Nhập lại mật khẩu" />
+              <Field name="confirmPass" label="Xác nhận mật khẩu *" type={showPass ? 'text' : 'password'} value={form.confirmPass} onChange={handleChange} fieldErrors={fieldErrors} placeholder="Nhập lại mật khẩu" />
             </div>
 
             <button

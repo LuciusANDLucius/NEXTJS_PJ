@@ -2,7 +2,7 @@ import React from 'react'
 
 export default function page() {
   return (
-    <div>
+    <div suppressHydrationWarning>
       <h1>Liên hệ</h1>
         <p>Để biết thêm thông tin về sản phẩm hoặc hỗ trợ, vui lòng liên hệ với chúng tôi qua:</p>
         <ul>
